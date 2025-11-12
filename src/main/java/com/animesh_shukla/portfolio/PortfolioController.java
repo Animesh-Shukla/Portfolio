@@ -2,31 +2,36 @@ package com.animesh_shukla.portfolio;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.ui.Model;
 
 @Controller
 public class PortfolioController {
     @GetMapping("/")
-    public String showIndexPage()
+    public String showIndexPage(Model model)
     {
-        return "index";
+        model.addAttribute("title", "Index");
+        return "main";
     }
 
     @GetMapping("/projects")
-    public String showProjectsPage()
+    public String showProjectsPage(Model model)
     {
-        return "projects";
+        model.addAttribute("title", "Projects");
+        return "main";
     }
 
     @GetMapping("/contact")
-    public String showContactPage()
+    public String showContactPage(Model model)
     {
-        return "contact";
+        model.addAttribute("title", "Contact");
+        return "main";
     }
 
     @GetMapping("/resume")
-    public String showResumePage()
+    public String showResumePage(Model model)
     {
-        return "resume";
+        model.addAttribute("title", "Resume");
+        return "main";
     }
 
 
