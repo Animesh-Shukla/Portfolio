@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
     <head>
+        <style>
+            .project-img {
+                width: 300px;
+                height: 300px;
+                object-fit: cover;
+            }
+        </style>
     </head>
     <body class="d-flex flex-column h-100 bg-light">
         <div th:fragment="projects">
@@ -22,7 +29,7 @@
  Signal Processing discipline. It calculates- Linear Convolution , Circular Convolution , DFT/IDFT</p>
                                             <p>Only handful of applications are present on the app store that provide this functionality</p>
                                         </div>
-                                        <!-- <img class="img-fluid" src="https://dummyimage.com/300x400/343a40/6c757d" alt="..." /> -->
+                                        <img class="img-fluid project-img" src="assets/images/DSP2.bmp" alt="..." />
                                     </div>
                                 </div>
                             </div>
@@ -36,7 +43,7 @@
  picking among various other functionalities to the user</p>
                                             <p>Inculcates the room persistence library to provide an abstraction layer over SQLite to allow for more robust database access</p>
                                         </div>
-                                        <!-- <img class="img-fluid" src="https://dummyimage.com/300x400/343a40/6c757d" alt="..." /> -->
+                                        <img class="img-fluid" src="assets/images/Scribble2.bmp" alt="..." />
                                     </div>
                                 </div>
                             </div>
