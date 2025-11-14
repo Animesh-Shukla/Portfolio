@@ -1,4 +1,4 @@
-package com.animesh_shukla.portfolio.Model;
+package com.animesh_shukla.model;
 
 public class Contact {
     private String name;
