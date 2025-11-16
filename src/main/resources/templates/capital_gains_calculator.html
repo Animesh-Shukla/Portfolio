@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Capital Gains Calculator</title>
+	<link rel="stylesheet" href="/assets/css/styles.css">
+	<style>
+		.capitalgains-result {
+			margin-top: 2rem;
+			padding: 1rem;
+			background: #f8f9fa;
+			border-radius: 8px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+		}
+	</style>
+</head>
+<body class="bg-light">
+	<div class="container py-5">
+		<h1 class="mb-4">Capital Gains Calculator</h1>
+		<form id="capitalGainForm" th:action="@{/capital_gains_calculator}" method="post" enctype="multipart/form-data">
+			<div class="mb-3">
+				<label for="csvFile" class="form-label">Upload File</label>
+				<input class="form-control" type="file" id="csvFile" name="file" accept=".csv,.xls,.xlsx" required>
+			</div>
+			<div class="mb-3 row">
+				<div class="col-md-6">
+					<label for="fromDate" class="form-label">From Date</label>
+					<input class="form-control" type="date" id="fromDate" name="fromDate">
+				</div>
+				<div class="col-md-6">
+					<label for="toDate" class="form-label">To Date</label>
+					<input class="form-control" type="date" id="toDate" name="toDate">
+				</div>
+			</div>
+			<button type="submit" class="btn btn-primary">Calculate Capital Gains</button>
+		</form>
+
+		<div id="capitalGainsResult" class="capitalgains-result" th:if="${capitalGainsValue != null}">
+			<h2>Capital Gains Value</h2>
+			<p th:text="${capitalGainsValue}"></p>
+		</div>
+	</div>
+</body>
+</html>
