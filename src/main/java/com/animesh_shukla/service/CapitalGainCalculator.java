@@ -14,7 +14,7 @@ import java.time.format.DateTimeParseException;
 public class CapitalGainCalculator {
 	private static final Logger logger = LoggerFactory.getLogger(CapitalGainCalculator.class);
 
-	public static class Entry {`
+	public static class Entry {
 		public String stockSymbol;
 		public String isin;
 		public int qty;
