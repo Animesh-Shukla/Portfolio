@@ -7,11 +7,14 @@ import java.io.*;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class CapitalGainCalculator {
 	private static final Logger logger = LoggerFactory.getLogger(CapitalGainCalculator.class);
 
-	public static class Entry {
+	public static class Entry {`
 		public String stockSymbol;
 		public String isin;
 		public int qty;
@@ -137,5 +140,45 @@ public class CapitalGainCalculator {
 		if (cell.getCellType() == CellType.NUMERIC) return cell.getNumericCellValue();
 		if (cell.getCellType() == CellType.STRING) return parseDouble(cell.getStringCellValue());
 		return 0.0;
+	}
+
+	public List<Entry> filterBySaleDate(List<Entry> entries, String fromDate, String toDate) {
+	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+	    LocalDate from = null, to = null;
+	    try {
+	        if (fromDate != null && !fromDate.isEmpty()) from = LocalDate.parse(fromDate, formatter);
+	        if (toDate != null && !toDate.isEmpty()) to = LocalDate.parse(toDate, formatter);
+	    } catch (DateTimeParseException e) {
+	        logger.warn("Invalid date format for fromDate/toDate: {} / {}", fromDate, toDate);
+	        return Collections.emptyList();
+	    }
+	    List<Entry> filtered = new ArrayList<>();
+	    for (Entry e : entries) {
+	        try {
+	            LocalDate sale = null;
+	            try {
+	                sale = LocalDate.parse(e.saleDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+	            } catch (DateTimeParseException ex1) {
+	                sale = LocalDate.parse(e.saleDate, DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH));
+	            }
+	            boolean afterFrom = (from == null) || !sale.isBefore(from);
+	            boolean beforeTo = (to == null) || !sale.isAfter(to);
+	            if (afterFrom && beforeTo) {
+	                filtered.add(e);
+	            }
+	        } catch (DateTimeParseException ex) {
+	            logger.warn("Skipping entry with invalid sale date: {}", e.saleDate);
+	        }
+	    }
+	    logger.info("Filtered {} entries between {} and {}.", filtered.size(), fromDate, toDate);
+	    return filtered;
+	}
+
+	public double calculateFilteredPnL(File file, String fromDate, String toDate) throws IOException {
+	    List<Entry> allEntries = parseFile(file);
+	    List<Entry> filtered = filterBySaleDate(allEntries, fromDate, toDate);
+	    double total = filtered.stream().mapToDouble(e -> e.profitLoss).sum();
+	    logger.info("Total filtered PnL: {}", total);
+	    return total;
 	}
 }
