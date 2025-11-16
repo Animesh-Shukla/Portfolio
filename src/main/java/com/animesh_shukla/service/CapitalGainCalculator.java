@@ -5,8 +5,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import java.io.*;
 import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CapitalGainCalculator {
+	private static final Logger logger = LoggerFactory.getLogger(CapitalGainCalculator.class);
 
 	public static class Entry {
 		public String stockSymbol;
@@ -23,23 +26,34 @@ public class CapitalGainCalculator {
 
 	public List<Entry> parseFile(File file) throws IOException {
 		String name = file.getName().toLowerCase();
+		logger.info("Parsing file: {}", name);
 		if (name.endsWith(".csv")) {
+			logger.info("Detected CSV file");
 			return parseCsv(file);
 		} else if (name.endsWith(".xls") || name.endsWith(".xlsx")) {
+			logger.info("Detected Excel file");
 			return parseExcel(file);
 		} else {
+			logger.error("Unsupported file type: {}", name);
 			throw new IllegalArgumentException("Unsupported file type: " + name);
 		}
 	}
 
 	private List<Entry> parseCsv(File file) throws IOException {
 		List<Entry> entries = new ArrayList<>();
+		logger.info("Starting CSV parsing: {}", file.getName());
 		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
 			String header = br.readLine(); // skip header
+			logger.debug("CSV header: {}", header);
 			String line;
+			int lineNum = 1;
 			while ((line = br.readLine()) != null) {
+				lineNum++;
 				String[] cols = line.split(",|\t");
-				if (cols.length < 10) continue;
+				if (cols.length < 10) {
+					logger.warn("Line {} skipped, not enough columns: {}", lineNum, line);
+					continue;
+				}
 				Entry e = new Entry();
 				e.stockSymbol = cols[0].trim();
 				e.isin = cols[1].trim();
@@ -52,20 +66,31 @@ public class CapitalGainCalculator {
 				e.purchaseValue = parseDouble(cols[8]);
 				e.profitLoss = parseDouble(cols[9]);
 				entries.add(e);
+				logger.debug("Parsed CSV entry: {}", e);
 			}
+		} catch (Exception ex) {
+			logger.error("Error parsing CSV file: {}", ex.getMessage(), ex);
+			throw ex;
 		}
+		logger.info("CSV parsing complete. Parsed {} entries.", entries.size());
 		return entries;
 	}
 
 	private List<Entry> parseExcel(File file) throws IOException {
 		List<Entry> entries = new ArrayList<>();
+		logger.info("Starting Excel parsing: {}", file.getName());
 		try (InputStream is = new FileInputStream(file)) {
 			Workbook workbook = file.getName().endsWith(".xlsx") ? new XSSFWorkbook(is) : new HSSFWorkbook(is);
 			Sheet sheet = workbook.getSheetAt(0);
 			boolean firstRow = true;
+			int rowNum = 0;
 			for (Row row : sheet) {
-				if (firstRow) { firstRow = false; continue; } // skip header
-				if (row.getPhysicalNumberOfCells() < 10) continue;
+				rowNum++;
+				if (firstRow) { firstRow = false; logger.debug("Excel header row: {}", rowNum); continue; } // skip header
+				if (row.getPhysicalNumberOfCells() < 10) {
+					logger.warn("Row {} skipped, not enough columns.", rowNum);
+					continue;
+				}
 				Entry e = new Entry();
 				e.stockSymbol = getCellString(row.getCell(0));
 				e.isin = getCellString(row.getCell(1));
@@ -78,17 +103,28 @@ public class CapitalGainCalculator {
 				e.purchaseValue = getCellNumeric(row.getCell(8));
 				e.profitLoss = getCellNumeric(row.getCell(9));
 				entries.add(e);
+				logger.debug("Parsed Excel entry: {}", e);
 			}
 			workbook.close();
+		} catch (Exception ex) {
+			logger.error("Error parsing Excel file: {}", ex.getMessage(), ex);
+			throw ex;
 		}
+		logger.info("Excel parsing complete. Parsed {} entries.", entries.size());
 		return entries;
 	}
 
 	private int parseInt(String s) {
-		try { return Integer.parseInt(s.trim()); } catch (Exception e) { return 0; }
+		try { return Integer.parseInt(s.trim()); } catch (Exception e) {
+			logger.warn("Failed to parse int from '{}': {}", s, e.getMessage());
+			return 0;
+		}
 	}
 	private double parseDouble(String s) {
-		try { return Double.parseDouble(s.trim()); } catch (Exception e) { return 0.0; }
+		try { return Double.parseDouble(s.trim()); } catch (Exception e) {
+			logger.warn("Failed to parse double from '{}': {}", s, e.getMessage());
+			return 0.0;
+		}
 	}
 	private String getCellString(Cell cell) {
 		if (cell == null) return "";
