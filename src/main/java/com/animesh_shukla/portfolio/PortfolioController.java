@@ -3,12 +3,15 @@ package com.animesh_shukla.portfolio;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.animesh_shukla.model.Contact;
 import com.animesh_shukla.service.send_email;
 
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.ui.Model;
+import com.animesh_shukla.service.CapitalGainCalculator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailException;
 
@@ -42,6 +45,33 @@ public class PortfolioController {
         model.addAttribute("title", "Contact");
         model.addAttribute("contact", new Contact());
         return "main";
+    }
+
+
+    @GetMapping("/capital_gains_calculator")
+    public String showCapitalGainsCalculatorPage(Model model) {
+        return "capital_gains_calculator";
+    }
+
+    @PostMapping("/capital_gains_calculator")
+    public String handleCapitalGainsUpload(@RequestParam("file") MultipartFile file, Model model) {
+        if (file.isEmpty()) {
+            model.addAttribute("capitalGainsValue", "No file uploaded.");
+            return "capital_gains_calculator";
+        }
+        try {
+            // Save uploaded file to temp
+            java.io.File convFile = java.io.File.createTempFile("upload", file.getOriginalFilename());
+            file.transferTo(convFile);
+            CapitalGainCalculator calc = new CapitalGainCalculator();
+            java.util.List<CapitalGainCalculator.Entry> entries = calc.parseFile(convFile);
+            double totalGains = entries.stream().mapToDouble(e -> e.profitLoss).sum();
+            model.addAttribute("capitalGainsValue", "Total Capital Gains: " + totalGains);
+            convFile.delete();
+        } catch (Exception ex) {
+            model.addAttribute("capitalGainsValue", "Error processing file: " + ex.getMessage());
+        }
+        return "capital_gains_calculator";
     }
 
     @PostMapping("/contact")
